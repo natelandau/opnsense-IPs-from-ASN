@@ -2,7 +2,7 @@
 
 _mainScript_() {
 
-  OUTPUT_FILE="/usr/local/custom_aliases/privacy_cidrs.txt"
+  OUTPUT_FILE="/usr/local/www/custom_aliases/privacy_cidrs.txt"
   #OUTPUT_FILE="$HOME/tmp/custom_aliases/privacy_cidrs.txt"
 
   ASN_LIST=(
@@ -27,8 +27,8 @@ _mainScript_() {
     fi
   done
 
-  cp "${TMPFILE}" "${OUTPUT_FILE}"
-  cat "${OUTPUT_FILE}"
+  _execute_ "cp \"${TMPFILE}\" \"${OUTPUT_FILE}\"" "Write IPs to: ${OUTPUT_FILE}"
+
 } # end _mainScript_
 
 # Set initial flags
