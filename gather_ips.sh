@@ -2,23 +2,22 @@
 
 _mainScript_() {
 
-  OUTPUT_FILE="/usr/local/www/custom_aliases/privacy_cidrs.txt"
-  #OUTPUT_FILE="$HOME/tmp/custom_aliases/privacy_cidrs.txt"
-
-  ASN_LIST=(
-    35995   # Twitter
-    32934   # Facebook
-    15169   # Google
-    396986  # Bytedance (TikTok)
-    792     # Oracle
-  )
-
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
   TMPFILE="${tmpDir}/iplist.txt"
 
+  # Source SETTINGS.conf
+  if [ -f "${DIR}/SETTINGS.conf" ]; then
+    source "${DIR}/SETTINGS.conf"
+  else
+    fatal "Can not run without a configuration file."
+  fi
+
+  # Create directory for output file
   if [[ ! -d "${OUTPUT_FILE%/*}" ]]; then
     _execute_ "mkdir -p \"${OUTPUT_FILE%/*}\"" "Creating missing directory: ${OUTPUT_FILE%/*}"
   fi
 
+  # Create the list of IP addresses
   for ASN in "${ASN_LIST[@]}"; do
     if "${IPV6}"; then
       whois -h whois.radb.net -- "-i origin ${ASN}" | grep ^route | awk '{print $2}' >> "${TMPFILE}"
@@ -27,18 +26,17 @@ _mainScript_() {
     fi
   done
 
-  _execute_ "cp \"${TMPFILE}\" \"${OUTPUT_FILE}\"" "Write IPs to: ${OUTPUT_FILE}"
+  # Write the IPs to the output file
+  _execute_ "cp \"${TMPFILE}\" \"${OUTPUT_FILE}\"" "Write $(wc -l "${TMPFILE}"| awk '{print $1}') IPs to: ${OUTPUT_FILE}"
 
 } # end _mainScript_
 
 # Set initial flags
 quiet=false
-LOGLEVEL=WARN
 verbose=false
 force=false
 dryrun=false
 IPV6=false
-#logFile=""
 declare -a args=()
 now=$(LC_ALL=C date +"%m-%d-%Y %r")                   # Returns: 06-14-2015 10:34:40 PM
 datestamp=$(LC_ALL=C date +%Y-%m-%d)                  # Returns: 2015-06-14
@@ -80,9 +78,9 @@ _alert_() {
   #                         fatal, info, input)
   #         $2 (required) - The message to be printed to stdout and/or a log file
   #         $3 (optional) - Pass '$LINENO' to print the line number where the _alert_ was triggered
-  # OUTS:   $logFile      - Path and filename of the logfile
+  # OUTS:   $LOG_FILE      - Path and filename of the LOG_FILE
   # USAGE:  [ALERTTYPE] "[MESSAGE]" "$LINENO"
-  # NOTES:  If '$logFile' is not set, a new log file will be created
+  # NOTES:  If '$LOG_FILE' is not set, a new log file will be created
   #         The colors of each alert type are set in this function
   #         For specified alert types, the funcstac will be printed
 
@@ -93,11 +91,11 @@ _alert_() {
 
   [ -z ${scriptName-} ] && scriptName="$(basename "$0")"
 
-  if [ -z "${logFile-}" ]; then
+  if [ -z "${LOG_FILE-}" ]; then
     readonly logLocation="${HOME}/logs"
     readonly logName="${scriptName%.sh}.log"
     [ ! -d "${logLocation}" ] && mkdir -p "${logLocation}"
-    logFile="${logLocation}/${logName}"
+    LOG_FILE="${logLocation}/${logName}"
   fi
 
   if [ -z "${line}" ]; then
@@ -147,8 +145,8 @@ _alert_() {
 
   _writeToLog_() {
  [[ "${alertType}" == "input" ]] && return 0
-    [[ "${LOGLEVEL}" =~ (off|OFF|Off) ]] && return 0
-    [[ ! -f "${logFile}" ]] && touch "${logFile}"
+    [[ "${LOGLEVEL:-ERROR}" =~ (off|OFF|Off) ]] && return 0
+    [[ ! -f "${LOG_FILE}" ]] && touch "${LOG_FILE}"
 
     # Don't use colors in logs
     if command -v gsed &>/dev/null; then
@@ -156,10 +154,10 @@ _alert_() {
     else
       local cleanmessage="$(echo "${message}" | sed -E 's/(\x1b)?\[(([0-9]{1,2})(;[0-9]{1,3}){0,2})?[mGK]//g')"
     fi
-    echo -e "$(date +"%b %d %R:%S") $(printf "[%7s]" "${alertType}") [$(/bin/hostname)] ${cleanmessage}" >>"${logFile}"
+    echo -e "$(date +"%b %d %R:%S") $(printf "[%7s]" "${alertType}") [$(/bin/hostname)] ${cleanmessage}" >>"${LOG_FILE}"
   }
 
-# Write specified log level data to logfile
+# Write specified log level data to LOG_FILE
 case "${LOGLEVEL:-ERROR}" in
   ALL|all|All)
     _writeToLog_
