@@ -31,9 +31,25 @@ These instructions are for installing directly on a device running OPNsesnse.
 5. Edit the configuration file (`SETTINGS.conf`) to reflect your preferences
 6. Create a symbolic link to `/usr/local/bin/`
    ```bash
-   sudo ln -s ${HOME}/opnsense-IPs-from-ASN/ips_from_asn.sh /usr/local/bin/ips_from_asn.sh
+   sudo ln -s \
+      ${HOME}/opnsense-IPs-from-ASN/ips_from_asn.sh \
+      /usr/local/bin/ips_from_asn.sh
    ```
-7. Run the script with sudo: `sudo ips_from_asn.sh`
+7. Enable use in OPNsense cron
+   ```bash
+   sudo ln -s \
+      ${HOME}/opnsense-IPs-from-ASN/actions.d/ips_from_asn.conf \
+      /usr/local/opnsense/service/conf/actions.d/actions_ips_from_asn.conf
+  ```
+8. Restart config.d: `sudo service configd restart`
+9. Run the script using configd (this will test that everything is working)
+   ```
+   sudo configctl ips_from_asn run
+   ```
+
+
+
+10. Run the script with sudo: `sudo ips_from_asn.sh`
 
 ## Default Configuration
 The default configuration assumes you are running this script directly within OPNsense
