@@ -3,7 +3,7 @@
 _mainScript_() {
 
   DIR="$( dirname "$(realpath "$0")" )"
-  TMPFILE="${tmpDir}/iplist.txt"
+  TMP_FILE="${tmpDir}/iplist.txt"
 
   # Source SETTINGS.conf
   if [ -f "${DIR}/SETTINGS.conf" ]; then
@@ -19,15 +19,16 @@ _mainScript_() {
 
   # Create the list of IP addresses
   for ASN in "${ASN_LIST[@]}"; do
-    if "${IPV6}"; then
-      whois -h whois.radb.net -- "-i origin ${ASN}" | grep ^route | awk '{print $2}' >> "${TMPFILE}"
+    if ${IPV6}; then
+    echo "$IPV6"
+      if ! whois -h whois.radb.net -- "-i origin ${ASN}" | grep -E '^route' | awk '{print $2}' >> "${TMP_FILE}"; then notice "No IPs returned from ASN: $ASN"; continue; fi
     else
-      whois -h whois.radb.net -- "-i origin ${ASN}" | grep ^route | grep -v '::' | awk '{print $2}' >> "${TMPFILE}"
+      if ! whois -h whois.radb.net -- "-i origin ${ASN}" | grep ^route | grep -v '::' | awk '{print $2}' >> "${TMP_FILE}"; then notice "No IPs returned from ASN: $ASN"; continue; fi
     fi
   done
 
   # Write the IPs to the output file
-  _execute_ "cp \"${TMPFILE}\" \"${OUTPUT_FILE}\"" "Write $(wc -l "${TMPFILE}"| awk '{print $1}') IPs to: ${OUTPUT_FILE}"
+  _execute_ "cp \"${TMP_FILE}\" \"${OUTPUT_FILE}\"" "Write $(wc -l "${TMP_FILE}"| awk '{print $1}') IPs to: ${OUTPUT_FILE}"
 
 } # end _mainScript_
 
@@ -37,13 +38,6 @@ verbose=false
 force=false
 dryrun=false
 declare -a args=()
-now=$(LC_ALL=C date +"%m-%d-%Y %r")                   # Returns: 06-14-2015 10:34:40 PM
-datestamp=$(LC_ALL=C date +%Y-%m-%d)                  # Returns: 2015-06-14
-hourstamp=$(LC_ALL=C date +%r)                        # Returns: 10:34:40 PM
-timestamp=$(LC_ALL=C date +%Y%m%d_%H%M%S)             # Returns: 20150614_223440
-today=$(LC_ALL=C date +"%m-%d-%Y")                    # Returns: 06-14-2015
-longdate=$(LC_ALL=C date +"%a, %d %b %Y %H:%M:%S %z") # Returns: Sun, 10 Jan 2016 20:47:53 -0500
-gmtdate=$(LC_ALL=C date -u -R | sed 's/\+0000/GMT/')  # Returns: Wed, 13 Jan 2016 15:55:29 GMT
 
 # Colors
 if tput setaf 1 &>/dev/null; then

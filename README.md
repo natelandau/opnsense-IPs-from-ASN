@@ -53,7 +53,6 @@ By default ASNs the following companies are included:
 | Facebook Corp         | AS54115 |
 | Facebook-offnet       | AS63293 |
 | Google                | AS15169 |
-| MoPub                 | AS63179 |
 | Oracle                | AS792   |
 | Twitter               | AS35995 |
 
