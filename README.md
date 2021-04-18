@@ -31,7 +31,7 @@ These instructions are for installing directly on a device running OPNsesnse.
 5. Edit the configuration file (`SETTINGS.conf`) to reflect your preferences
 6. Create a symbolic link to `/usr/local/bin/`
    ```bash
-   sudo ln -s /usr/local/bin/ips_from_asn.sh ${HOME}/opnsense-IPs-from-ASN/ips_from_asn.sh
+   sudo ln -s ${HOME}/opnsense-IPs-from-ASN/ips_from_asn.sh /usr/local/bin/ips_from_asn.sh
    ```
 7. Run the script with sudo: `sudo ips_from_asn.sh`
 

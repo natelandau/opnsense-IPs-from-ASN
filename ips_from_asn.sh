@@ -2,7 +2,7 @@
 
 _mainScript_() {
 
-  DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+  DIR="$( dirname "$(realpath "$0")" )"
   TMPFILE="${tmpDir}/iplist.txt"
 
   # Source SETTINGS.conf
