@@ -1,25 +1,20 @@
 # OPNsense IP Addresses from ASN
-
-This repository aims to make creating selective routing rules targeting an entire company possible within an OPNsense firewall. OPNsense does provide support for creating HOST aliases which use FQDNs. However, these aliases do not support wildcards which makes it nearly impossible to selectively route, say, every Facebook domain to a specific firewall rule.
-
-**Note:** Blocking wildcard domains at the DNS level is possible out-of-the-box using Unbound within OPNsense.
+This script creates a text file of all IPs associated with any number of ASNs for use in creating selective routing rules within OPNsense. Use it if you want to route, say, every Facebook IP address regardless of domain name to a specific firewall rule.
 
 ### Why use selective routing rules?
 Some scenarios in which you may want to use this script are:
 
-* Routing traffic to a specific company through a VPN
-* Allowing outgoing or incoming traffic from a specific company or IP range
+* Routing outbound traffic to specific company's ASN through a VPN
+* Allowing incoming traffic from a specific company's ASN
 
 ### Limitations
-This script is a hammer, not a scalpel.  It will add *ALL* IP ranges from the targeted companies to the rule.  To create rules for specific URLs, add them to a `Host(s)` alias in `OPNsense --> Firewalls --> Aliases`
+This script is a hammer, not a scalpel.  It will add *ALL* IP ranges from the targeted companies to the rule.  To create rules for specific FQDNs, add them to a `Host(s)` alias in `OPNsense --> Firewalls --> Aliases` You can [read this document](https://www.arin.net/resources/guide/asn/) to learn more about ASNs.
 
 ### How it works
-This included shell script gathers the IP ranges associated with the ASNs specified in the configuration file. It then writes these IP addresses into a text file that can be read from an OPNsense `URL Table (IPs)` alias.
-
-You can [read this document](https://www.arin.net/resources/guide/asn/) to learn more about ASNs.
+Gathers the IP ranges associated with the ASNs specified in the configuration file and writes these IP addresses into a text file that can be read from an OPNsense `URL Table (IPs)` alias.
 
 # Installation and Usage
-These instructions are for installing directly on a device running OPNsesnse.
+These instructions are for installing directly on a device running OPNsense.
 
 1. SSH in to OPNsense
 2. Install Git: `pkg install git`
@@ -40,26 +35,21 @@ These instructions are for installing directly on a device running OPNsesnse.
    sudo ln -s \
       ${HOME}/opnsense-IPs-from-ASN/actions.d/ips_from_asn.conf \
       /usr/local/opnsense/service/conf/actions.d/actions_ips_from_asn.conf
-  ```
+    ```
 8. Restart config.d: `sudo service configd restart`
-9. Run the script using configd (this will test that everything is working)
+9. Run the script using configd. If it works, you should see a file created at the location you specified in the settings.
    ```
    sudo configctl ips_from_asn run
    ```
 
-
-
-10. Run the script with sudo: `sudo ips_from_asn.sh`
-
 ## Default Configuration
 The default configuration assumes you are running this script directly within OPNsense
 
-A file named `privacy_cidrs.txt` is created containing all the IP addresses.  This file is written to a directory named `custom_aliases` will is created at OPNsense's web root (`/usr/local/www`). This can be customized with the `OUTPUT_FILE` variable
+A file named `ips_from_asn.txt` is created containing all the IP addresses.  This file is written to a directory named `custom_aliases` will is created at OPNsense's web root (`/usr/local/www`). This can be customized with the `OUTPUT_FILE` variable
 
 Other settings should be self-evident within `SETTINGS.conf`
 
-### ASNs included
-By default ASNs the following companies are included:
+### Default ASNs
 
 | Company               | ASN     |
 | ---                   | ---     |
@@ -72,17 +62,16 @@ By default ASNs the following companies are included:
 | Oracle                | AS792   |
 | Twitter               | AS35995 |
 
-To add a new company's IP addresses, follow these steps.
+To add a new company's ASN, follow these steps.
 
- 1. run `dig companyname.com` from a command line to get a sample IP address
- 2. Copy one of the IP addresses
- 3. Paste it into this tool: https://hackertarget.com/as-ip-lookup/
- 4. If the ASN returned belongs to that company you're good to go. IF, on the other hand the company is a different network provider, you likely don't want to add it to this script. (ie, adding a CDN is a bad idea.)
- 5. Add the ASN number to the `ASN_LIST` array in `SETTINGS.conf`
+ 1. Copy an IP address from the company
+ 2. Paste it into this tool: https://hackertarget.com/as-ip-lookup/
+ 4. Add the ASN number to the `ASN_LIST` array in `SETTINGS.conf`
+
+**NOTE:** Many companies do not have their own ASN.  If the ASN for your sample IP is a CDN (Akamai, Fastly,Cloudflare, etc), or a cloud hosting provider you will be routing ALL services hosted within that ASN.
 
 ### CLI Flags
 ```
- -I  --IPV6        Collect IPV6 addresses.  Defaults to IPV4 only.
  -h, --help        Display help and exit
  -n, --dryrun      Non-destructive. Makes no permanent changes.
  -q, --quiet       Quiet (no output)
@@ -98,7 +87,7 @@ To add a new company's IP addresses, follow these steps.
  4. Name it something
  5. Select type `URL Table (IPs)`
  6. Set it to `30 days` as a `Refresh Frequency` (These IPs don't update frequently)
- 7. In the `Content` field add: `https://127.0.0.1/custom_aliases/privacy_cidrs.txt`
+ 7. In the `Content` field add: `https://127.0.0.1/custom_aliases/ips_from_asn.txt`
  8. Add a `Description` if you want
  9. `Save` and `Apply` the alias
  10. Build whatever firewall rules you want
@@ -110,4 +99,5 @@ To update these IPs, you need to add the script to cron
 2. Navigate to `System --> Administration --> Cron`
 3. Click the `+` button to add a new cron task
 4. Change `Day of the Month` to `1` and leave everything else as a default
-5.
+
+![Cron Job](assets/cron.png)
