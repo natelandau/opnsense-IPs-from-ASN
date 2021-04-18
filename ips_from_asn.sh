@@ -2,7 +2,7 @@
 
 _mainScript_() {
 
-  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+  DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
   TMPFILE="${tmpDir}/iplist.txt"
 
   # Source SETTINGS.conf
@@ -36,7 +36,6 @@ quiet=false
 verbose=false
 force=false
 dryrun=false
-IPV6=false
 declare -a args=()
 now=$(LC_ALL=C date +"%m-%d-%Y %r")                   # Returns: 06-14-2015 10:34:40 PM
 datestamp=$(LC_ALL=C date +%Y-%m-%d)                  # Returns: 2015-06-14
@@ -246,16 +245,10 @@ _usage_() {
   The README at the root of the git repository contains instructions for installing this script.
 
   ${bold}Options:${reset}
-    -I  --IPV6        Collect IPV6 addresses.  Defaults to IPV4 only.
     -h, --help        Display this help and exit
-    -l, --loglevel    One of: FATAL, ERROR, WARN, INFO, DEBUG, ALL, OFF  (Default is 'ERROR')
-
-      $ $(basename "$0") --loglevel 'WARN'
-
     -n, --dryrun      Non-destructive. Makes no permanent changes.
     -q, --quiet       Quiet (no output)
     -v, --verbose     Output more information. (Items echoed to 'verbose')
-    --force           Skip all user interaction.  Implied 'Yes' to all actions.
 EOF
 }
 
@@ -501,16 +494,9 @@ _parseOptions_() {
         _usage_ >&2
         _safeExit_
         ;;
-      -I | --IPV6)
-        IPV6=true ;;
-      -l | --loglevel)
-        shift
-        LOGLEVEL=${1}
-        ;;
       -n | --dryrun) dryrun=true ;;
       -v | --verbose) verbose=true ;;
       -q | --quiet) quiet=true ;;
-      --force) force=true ;;
       --endopts)
         shift
         break
